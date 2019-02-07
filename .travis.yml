@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sunycatmsk/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run sunycatmsk/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t sunycatmsk/multi-client ./client
+  - docker build -t sunycatmsk/multi-nginx ./nginx
+  - docker build -t sunycatmsk/multi-server ./server
+  - docker build -t sunycatmsk/multi-worker ./worker
+  
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push  them to the docker hub
+  - docker push sunycatmsk/multi-client
+  - docker push sunycatmsk/multi-nginx
+  - docker push sunycatmsk/multi-server
+  - docker push sunycatmsk/multi-worker
+
